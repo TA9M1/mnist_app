@@ -21,13 +21,18 @@ app = Flask(__name__)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-try:
-    model = load_model('./model.keras', compile=False)
-except TypeError:
-    # 万が一エラーが出る場合の予備策
-    import tensorflow as tf
-    model = tf.keras.models.load_model('./model.keras', compile=False)#学習済みモデルをロード
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 
+def custom_load():
+    try:
+        # safe_mode=False を追加して、認識できない設定項目を無視させます
+        return load_model('./model.keras', compile=False, safe_mode=False)
+    except Exception:
+        # 万が一の予備策
+        return tf.keras.models.load_model('./model.keras', compile=False, safe_mode=False)
+
+model = custom_load()
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
