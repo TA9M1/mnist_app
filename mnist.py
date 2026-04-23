@@ -21,7 +21,12 @@ app = Flask(__name__)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-model = load_model('./model.keras')#学習済みモデルをロード
+try:
+    model = load_model('./model.keras', compile=False)
+except TypeError:
+    # 万が一エラーが出る場合の予備策
+    import tensorflow as tf
+    model = tf.keras.models.load_model('./model.keras', compile=False)#学習済みモデルをロード
 
 
 @app.route('/', methods=['GET', 'POST'])
