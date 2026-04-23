@@ -15,24 +15,14 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 
-# app.secret_key = "your_secret_key_here"
+# app.secret_key = "your_secret_key_here"  
 # submitボタンを押した際にエラーが出た場合上の行のコメントアウトを削除し、your_secret_key_hereに任意の文字列（例:aidemy)を指定し、再度アプリケーションを実行してください。
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+model = load_model('./model.keras')#学習済みモデルをロード
 
-def custom_load():
-    try:
-        # safe_mode=False を追加して、認識できない設定項目を無視させます
-        return load_model('./model.keras', compile=False, safe_mode=False)
-    except Exception:
-        # 万が一の予備策
-        return tf.keras.models.load_model('./model.keras', compile=False, safe_mode=False)
-
-model = custom_load()
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -64,4 +54,5 @@ def upload_file():
 
 
 if __name__ == "__main__":
-    app.run()
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host ='0.0.0.0',port = port)
