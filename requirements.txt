@@ -30,3 +30,4 @@ termcolor
 urllib3
 Werkzeug
 wheel
+gunicorn
