@@ -1,4 +1,6 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # 余計なログを消す
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' # ワンクッション置いてメモリ消費を抑える
 from flask import Flask, request, redirect, render_template, flash
 from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
