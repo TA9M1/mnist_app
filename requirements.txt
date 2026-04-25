@@ -15,7 +15,6 @@ html5lib
 itsdangerous
 idna
 Jinja2
-Keras>=3.14.0
 line-bot-sdk
 Markdown
 MarkupSafe
@@ -23,12 +22,13 @@ numpy
 oauthlib
 pillow
 protobuf
+PyYAML
+python-dotenv
 requests
+scipy
 six
 tensorboard
-tensorboard-data-server
-tensorflow-cpu>=2.16.1
+tensorflow-cpu
 termcolor
 urllib3
 Werkzeug
-wheel
