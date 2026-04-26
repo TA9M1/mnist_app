@@ -15,11 +15,11 @@ html5lib
 itsdangerous
 idna
 Jinja2
-Keras>=3.14.0
+Keras>=3.0.0
 line-bot-sdk
 Markdown
 MarkupSafe
-numpy
+numpy<2.0.0
 oauthlib
 pillow
 protobuf
