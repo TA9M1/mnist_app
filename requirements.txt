@@ -1,5 +1,6 @@
 flask
 pillow
 tensorflow-cpu
+tf-keras
 deepface
 gunicorn
