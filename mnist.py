@@ -1,36 +1,61 @@
-from deepface import DeepFace
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# 解析したい写真のファイル名に書き換えてください（フォルダ内に置いておく）
-target_photo = "test_photo.jpg" 
+from flask import Flask, request, redirect, render_template, flash
+from werkzeug.utils import secure_filename
+from PIL import Image, ImageOps
+import numpy as np
+from deepface import DeepFace  # 笑顔判定用
 
-def test_smile():
-    if not os.path.exists(target_photo):
-        print(f"エラー: {target_photo} が見つかりません。写真をフォルダに置いてください。")
-        return
+app = Flask(__name__)
+app.secret_key = "aidemy"
 
-    print(f"--- {target_photo} を解析中ッ！ ---")
-    
+# --- 設定 ---
+UPLOAD_FOLDER = "/tmp/uploads"
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# 笑顔判定ロジック
+def analyze_smile(filepath):
     try:
-        # DeepFaceで感情分析
-        # 初回実行時はモデル（約100MB〜）のダウンロードが自動で始まります
         results = DeepFace.analyze(
-            img_path=target_photo, 
+            img_path=filepath, 
             actions=['emotion'],
-            enforce_detection=True  # 顔が見つからない場合にエラーを出す設定
+            enforce_detection=True
         )
-
-        for i, res in enumerate(results):
-            score = res['emotion']['happy']
-            print(f"一人目（顔 index {i}）の笑顔スコア: {score:.2f}点")
-            
-            if score > 80:
-                print("最高だッ！年賀状確定だッ！")
-            else:
-                print("もう少し笑顔が欲しいところだぜ…")
-
+        # 全員の笑顔スコアの平均などを計算（今回は1人目を基準）
+        score = results[0]['emotion']['happy']
+        if score > 80:
+            return f"笑顔スコア: {score:.1f}点！最高だッ！年賀状確定だッ！"
+        else:
+            return f"笑顔スコア: {score:.1f}点。もう少し笑顔が欲しいところだぜ…"
     except Exception as e:
-        print(f"解析失敗: {e}")
+        return f"顔が見つかりませんでしたッ！（{str(e)}）"
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if not file or file.filename == '':
+            flash('ファイルがありません')
+            return redirect(request.url)
+        
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+
+        # 笑顔判定を実行
+        pred_answer = analyze_smile(filepath)
+
+        # 処理後に一時ファイルを削除
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+        return render_template("index.html", answer=pred_answer)
+
+    return render_template("index.html", answer="")
 
 if __name__ == "__main__":
-    test_smile()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
