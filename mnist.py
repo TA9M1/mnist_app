@@ -1,102 +1,36 @@
+from deepface import DeepFace
 import os
-# メモリ消費とログを最小限に抑える設定
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-from flask import Flask, request, redirect, render_template, flash, url_for
-from werkzeug.utils import secure_filename
-from PIL import Image, ImageOps, UnidentifiedImageError  # エラー型を追加
-import numpy as np
+# 解析したい写真のファイル名に書き換えてください（フォルダ内に置いておく）
+target_photo = "test_photo.jpg" 
 
-app = Flask(__name__)
-app.secret_key = "aidemy"
+def test_smile():
+    if not os.path.exists(target_photo):
+        print(f"エラー: {target_photo} が見つかりません。写真をフォルダに置いてください。")
+        return
 
-classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-image_size = 28
+    print(f"--- {target_photo} を解析中ッ！ ---")
+    
+    try:
+        # DeepFaceで感情分析
+        # 初回実行時はモデル（約100MB〜）のダウンロードが自動で始まります
+        results = DeepFace.analyze(
+            img_path=target_photo, 
+            actions=['emotion'],
+            enforce_detection=True  # 顔が見つからない場合にエラーを出す設定
+        )
 
-# --- 書き込み権限のある /tmp フォルダを利用 ---
-UPLOAD_FOLDER = "/tmp/uploads"
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# モデル保持用の変数
-model = None
-
-def get_model():
-    global model
-    if model is None:
-        import keras
-        from keras.models import load_model
-        try:
-            model = load_model('./model.keras', compile=False)
-        except Exception:
-            model = load_model('./model.keras')
-    return model
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        file = request.files.get('file')
-        if not file or file.filename == '':
-            flash('ファイルが選択されていません')
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
-
-            try:
-                # --- 【処方箋B: 画像読み込みの鑑査】 ---
-                try:
-                    raw_img = Image.open(filepath).convert("RGBA")
-                except (UnidentifiedImageError, OSError):
-                    # 画像として認識できない、または破損している場合
-                    if os.path.exists(filepath):
-                        os.remove(filepath)
-                    flash('画像の形式が正しくないか、破損しています。JPG/PNG形式を試してください。')
-                    return redirect(request.url)
-
-                # 画像処理
-                canvas = Image.new("RGBA", raw_img.size, (255, 255, 255))
-                canvas.paste(raw_img, mask=raw_img)
-                img = canvas.convert("L")
-                img = ImageOps.invert(img)
-                img = img.point(lambda x: 0 if x < 128 else 255)
-                img = img.resize((image_size, image_size))
-                
-                # 必要なタイミングでKerasの処理をインポート
-                import keras
-                from keras.utils import img_to_array
-                
-                img_array = img_to_array(img)
-                img_array = img_array / 255.0  
-                data = np.expand_dims(img_array, axis=0)
-
-                current_model = get_model()
-                result = current_model.predict(data, verbose=0)[0]
-                predicted = result.argmax()
-                pred_answer = f"これは {classes[predicted]} です"
-
-            except Exception as e:
-                # その他の予期せぬエラー（メモリ不足など）をキャッチ
-                flash(f'エラーが発生しました: {str(e)}')
-                return redirect(request.url)
+        for i, res in enumerate(results):
+            score = res['emotion']['happy']
+            print(f"一人目（顔 index {i}）の笑顔スコア: {score:.2f}点")
             
-            finally:
-                # 処理が終わったら（成功・失敗問わず）ファイルを削除
-                if os.path.exists(filepath):
-                    os.remove(filepath)
+            if score > 80:
+                print("最高だッ！年賀状確定だッ！")
+            else:
+                print("もう少し笑顔が欲しいところだぜ…")
 
-            return render_template("index.html", answer=pred_answer)
-
-    return render_template("index.html", answer="")
+    except Exception as e:
+        print(f"解析失敗: {e}")
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    test_smile()
