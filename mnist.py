@@ -47,11 +47,10 @@ def upload_file():
         if not file or file.filename == '':
             flash('ファイルがありません')
             return redirect(request.url)
-        
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
             filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
 
             # 画像処理
             raw_img = Image.open(filepath).convert("RGBA")
@@ -80,9 +79,10 @@ def upload_file():
             if os.path.exists(filepath):
                 os.remove(filepath)
 
-            return render_template("index.html", answer=pred_answer)
+            return render_template("index.html",answer=pred_answer)
 
-    return render_template("index.html", answer="")
+    return render_template("index.html",answer="")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))

@@ -23,12 +23,13 @@ numpy<2.0.0
 oauthlib
 pillow
 protobuf
+PyYAML
+python-dotenv
 requests
+scipy
 six
 tensorboard
-tensorboard-data-server
-tensorflow-cpu>=2.16.1
+tensorflow-cpu
 termcolor
 urllib3
 Werkzeug
-wheel
