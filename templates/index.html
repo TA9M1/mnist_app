@@ -1,12 +1,81 @@
-<header style="display: flex; align-items: center; justify-content: space-between; padding: 10px 5%; background-color: #2c3e50; color: white;">
-    <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: 1px;">
-        <span style="color: #3498db;">AI</span> Image Lab
-    </div>
-    <nav>
-        <span style="font-size: 0.8rem; opacity: 0.8;">Precision Analysis System</span>
-    </nav>
-</header>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Visual Lab | Smile Ranking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">AI Visual <span class="accent">Lab</span></div>
+        <div class="header-tag">Smile Data Analytics</div>
+    </header>
 
-<footer style="margin-top: 50px; padding: 20px; text-align: center; border-top: 1px solid #eee; color: #95a5a6;">
-    <small>&copy; 2026 AI Image Analyzer Project. All rights reserved.</small>
-</footer>
+    <div class="container">
+        <section class="card upload-card">
+            <h1>Smile Ranking System</h1>
+            <p>複数画像を一括解析。ファイル名で対象を特定しやすくしました</p>
+            <form method="POST" enctype="multipart/form-data" class="upload-form">
+                <input type="file" name="file" class="input-file" multiple>
+                <button type="submit" class="btn-primary">一括解析ッ！</button>
+            </form>
+        </section>
+
+        {% if answer %}
+        <section class="card result-card">
+            <p class="score-text">{{ answer }}</p>
+            <img src="{{ image_url }}" class="result-img">
+        </section>
+        {% endif %}
+
+        {% if ranking %}
+        <section class="card ranking-card">
+            <h2>🏆 Smile Ranking TOP 10</h2>
+            <div class="table-wrapper">
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Photo</th>
+                            <th>File Name</th> <th>Score & Visualizer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in ranking %}
+                        <tr class="rank-row {% if item.score >= 85 %}high-score-row{% endif %}">
+                            <td class="rank-cell">
+                                {% if loop.index == 1 %}<span class="medal gold">🥇</span>
+                                {% elif loop.index == 2 %}<span class="medal silver">🥈</span>
+                                {% elif loop.index == 3 %}<span class="medal bronze">🥉</span>
+                                {% else %}{{ loop.index }}{% endif %}
+                            </td>
+                            <td>
+                                <div class="thumb-container">
+                                    <img src="{{ item.url }}" class="thumb">
+                                    {% if item.score >= 85 %}<span class="excellent-badge">Good!</span>{% endif %}
+                                </div>
+                            </td>
+                            <td class="file-name-cell">{{ item.filename }}</td> <td class="score-cell">
+                                <span class="pts {% if item.score >= 85 %}text-highlight{% endif %}">
+                                    {{ item.score }} <small>pts</small>
+                                </span>
+                                <div class="gauge-bg">
+                                    <div class="gauge-fill {% if item.score >= 85 %}gauge-excellent{% endif %}" 
+                                         style="width: {{ item.score }}%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 AI Visual Lab. Project for Smile Analytics.</p>
+    </footer>
+</body>
+</html>

@@ -1,64 +1,76 @@
-header {
-    background-color: #76B55B;
-    height: 60px;
-    margin: -8px;
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --success: #27ae60;
+    --bg: #f5f6fa;
+    --white: #ffffff;
+}
+
+body {
+    margin: 0;
+    font-family: 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background-color: var(--bg);
+}
+
+.navbar {
+    background: var(--primary);
+    color: white;
+    padding: 1rem 5%;
     display: flex;
-    flex-direction: row-reverse;
     justify-content: space-between;
+    align-items: center;
 }
 
-.header-logo {
-    color: #fff;
-    font-size: 25px;
-    margin: 15px 25px;
-}
+.logo { font-size: 1.5rem; font-weight: bold; }
+.accent { color: var(--accent); }
 
-.header_img {
-    height: 25px;
-    margin: 15px 25px;
-}
+.container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
 
-.main {
-    height: 370px;
-}
-
-h2 {
-    color: #444444;
-    margin: 90px 0px;
+.card {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
     text-align: center;
 }
 
-p {
-    color: #444444;
-    margin: 70px 0px 30px 0px;
-    text-align: center;
+.btn-primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
-.answer {
-    color: #444444;
-    margin: 70px 0px 30px 0px;
-    text-align: center;
-}
+.ranking-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+.ranking-table th { padding: 12px; border-bottom: 2px solid #eee; font-size: 0.9rem; color: #7f8c8d; }
+.ranking-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-form {
-    text-align: center;
-}
+.file-name-cell { font-size: 0.8rem; color: #34495e; font-family: monospace; text-align: left; }
+.high-score-row { background-color: rgba(46, 204, 113, 0.08) !important; }
+.text-highlight { color: var(--success) !important; font-weight: bold; }
 
-footer {
-    background-color: #F7F7F7;
-    height: 110px;
-    margin: -8px;
-    position: relative;
-}
+.thumb-container { position: relative; display: inline-block; }
+.thumb { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
 
-.footer_img {
-    height: 25px;
-    margin: 15px 25px;
-}
-
-small {
-    margin: 15px 25px;
+.excellent-badge {
     position: absolute;
-    left: 0;
-    bottom: 0;
+    top: -5px;
+    right: -8px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.5rem;
+    padding: 2px 5px;
+    border-radius: 10px;
+    font-weight: bold;
 }
+
+.gauge-bg { width: 100px; height: 6px; background: #eee; border-radius: 3px; margin: 5px auto; overflow: hidden; }
+.gauge-fill { height: 100%; background: var(--accent); transition: width 1s ease; }
+.gauge-excellent { background: linear-gradient(90deg, #f1c40f, #f39c12) !important; }
+
+.result-img { max-width: 300px; border-radius: 10px; margin-top: 20px; }
+footer { text-align: center; padding: 20px; color: #95a5a6; font-size: 0.8rem; }
