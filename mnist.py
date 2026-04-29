@@ -2,17 +2,21 @@ import os
 from flask import Flask, request, render_template, url_for
 from werkzeug.utils import secure_filename
 from deepface import DeepFace
+from PIL import Image, ImageOps
+import pillow_heif
+
+# HEIC対応
+pillow_heif.register_heif_opener()
 
 app = Flask(__name__)
 
-# 保存先設定
 UPLOAD_FOLDER = './static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'heic', 'HEIC'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ランキングデータ保持用
+# ランキング履歴を保持
 ranking_history = []
 
 def allowed_file(filename):
@@ -20,12 +24,48 @@ def allowed_file(filename):
 
 def analyze_smile(img_path):
     try:
-        results = DeepFace.analyze(img_path=img_path, actions=['emotion'], enforce_detection=False)
-        smile_score = results[0]['emotion']['happy']
-        return round(float(smile_score), 1)
+        # 画像を開き、向きを補正
+        img = Image.open(img_path)
+        img = ImageOps.exif_transpose(img)
+
+        # リサイズ（長辺1200pxに制限）
+        max_size = 1200
+        if max(img.size) > max_size:
+            ratio = max_size / max(img.size)
+            new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+
+        # 保存先のパスを .jpg に統一
+        new_filename = os.path.splitext(os.path.basename(img_path))[0] + ".jpg"
+        new_jpg_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        img.save(new_jpg_path, "JPEG", quality=90)
+
+        # RetinaFaceで高精度に全員を解析
+        results = DeepFace.analyze(
+            img_path=new_jpg_path, 
+            actions=['emotion'], 
+            enforce_detection=False,
+            detector_backend='retinaface'
+        )
+        
+        scores = []
+        for face in results:
+            scores.append(round(float(face['emotion']['happy']), 1))
+        
+        scores.sort(reverse=True)
+        score_details = ", ".join(map(str, scores))
+        
+        top_score = scores[0] if scores else 0.0
+        face_count = len(scores)
+        
+        return top_score, face_count, score_details, new_filename
+
     except Exception as e:
         print(f"解析エラー: {e}")
-        return 0.0
+        return 0.0, 0, "N/A", os.path.basename(img_path)
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -44,21 +84,24 @@ def upload_file():
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
 
-                score = analyze_smile(filepath)
+                score, face_count, details, final_filename = analyze_smile(filepath)
+                
                 if score >= 85:
                     count_high_score += 1
                 
                 new_entry = {
-                    'filename': filename, # ファイル名を保持
+                    'filename': final_filename,
                     'score': score,
-                    'url': url_for('static', filename='uploads/' + filename)
+                    'face_count': face_count,
+                    'details': details,
+                    'url': url_for('static', filename='uploads/' + final_filename)
                 }
                 ranking_history.append(new_entry)
                 last_image_url = new_entry['url']
 
         ranking_history.sort(key=lambda x: x['score'], reverse=True)
         
-        msg = f"解析完了：{len(files)}枚中、{count_high_score}枚が85点以上でした！"
+        msg = f"解析完了：{len(files)}枚中、{count_high_score}枚がハイスコアでした！"
         return render_template("index.html", answer=msg, image_url=last_image_url, ranking=ranking_history[:10])
 
     return render_template("index.html", answer=None, image_url=None, ranking=ranking_history)

@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Visual Lab | Smile Ranking</title>
+    <title>笑顔で写真選別プロジェクト／笑顔点数でランキング！</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
 <body>
     <header class="navbar">
         <div class="logo">AI Visual <span class="accent">Lab</span></div>
-        <div class="header-tag">Smile Data Analytics</div>
+        <div class="header-tag">Professional Data Extraction Mode</div>
     </header>
 
     <div class="container">
         <section class="card upload-card">
             <h1>Smile Ranking System</h1>
-            <p>複数画像を一括解析。ファイル名で対象を特定しやすくしました</p>
+            <p>集合写真対応。85点以上の写真は一括で名前を抽出できます</p>
             <form method="POST" enctype="multipart/form-data" class="upload-form">
                 <input type="file" name="file" class="input-file" multiple>
-                <button type="submit" class="btn-primary">一括解析ッ！</button>
+                <button type="submit" class="btn-primary">解析開始</button>
             </form>
         </section>
 
@@ -31,51 +31,65 @@
 
         {% if ranking %}
         <section class="card ranking-card">
-            <h2>🏆 Smile Ranking TOP 10</h2>
-            <div class="table-wrapper">
-                <table class="ranking-table">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Photo</th>
-                            <th>File Name</th> <th>Score & Visualizer</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in ranking %}
-                        <tr class="rank-row {% if item.score >= 85 %}high-score-row{% endif %}">
-                            <td class="rank-cell">
-                                {% if loop.index == 1 %}<span class="medal gold">🥇</span>
-                                {% elif loop.index == 2 %}<span class="medal silver">🥈</span>
-                                {% elif loop.index == 3 %}<span class="medal bronze">🥉</span>
-                                {% else %}{{ loop.index }}{% endif %}
-                            </td>
-                            <td>
-                                <div class="thumb-container">
-                                    <img src="{{ item.url }}" class="thumb">
-                                    {% if item.score >= 85 %}<span class="excellent-badge">Good!</span>{% endif %}
-                                </div>
-                            </td>
-                            <td class="file-name-cell">{{ item.filename }}</td> <td class="score-cell">
-                                <span class="pts {% if item.score >= 85 %}text-highlight{% endif %}">
-                                    {{ item.score }} <small>pts</small>
-                                </span>
-                                <div class="gauge-bg">
-                                    <div class="gauge-fill {% if item.score >= 85 %}gauge-excellent{% endif %}" 
-                                         style="width: {{ item.score }}%;"></div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="ranking-header">
+                <h2>🏆 Smile Ranking TOP 10</h2>
+                <button onclick="copyHighScores()" class="btn-secondary">📋 85点以上のファイル名をコピー</button>
             </div>
+
+            <textarea id="copy-area" style="display:none;">{% for item in ranking %}{% if item.score >= 85 %}{{ item.filename }}
+{% endif %}{% endfor %}</textarea>
+
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Photo</th>
+                        <th>Info</th>
+                        <th>Best Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ranking %}
+                    <tr class="rank-row {% if item.score >= 85 %}high-score-row{% endif %}">
+                        <td class="rank-cell">
+                            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+                        </td>
+                        <td>
+                            <div class="thumb-container">
+                                <img src="{{ item.url }}" class="thumb">
+                                {% if item.score >= 85 %}<span class="excellent-badge">Good!</span>{% endif %}
+                            </div>
+                        </td>
+                        <td class="file-name-cell">
+                            <div class="fname" title="クリックで選択">{{ item.filename }}</div>
+                            <div class="fcount">検出: {{ item.face_count }}人</div>
+                            {% if item.face_count > 1 %}
+                            <div class="fdetails">内訳: {{ item.details }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="score-cell">
+                            <span class="pts {% if item.score >= 85 %}text-highlight{% endif %}">{{ item.score }} <small>pts</small></span>
+                            <div class="gauge-bg"><div class="gauge-fill {% if item.score >= 85 %}gauge-excellent{% endif %}" style="width: {{ item.score }}%;"></div></div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </section>
         {% endif %}
     </div>
 
-    <footer>
-        <p>&copy; 2026 AI Visual Lab. Project for Smile Analytics.</p>
-    </footer>
+    <script>
+    function copyHighScores() {
+        const copyText = document.getElementById("copy-area").value.trim();
+        if (!copyText) {
+            alert("85点以上のファイル名が見つかりません。");
+            return;
+        }
+        navigator.clipboard.writeText(copyText).then(() => {
+            alert("85点以上のファイル名をコピーしました（改行区切り）。\n貼り付けの際に活用してください。");
+        });
+    }
+    </script>
 </body>
 </html>

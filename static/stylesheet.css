@@ -1,76 +1,51 @@
 :root {
-    --primary: #2c3e50;
-    --accent: #3498db;
-    --success: #27ae60;
-    --bg: #f5f6fa;
-    --white: #ffffff;
+    --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --gold: #f1c40f; --bg: #f5f6fa; --white: #ffffff;
 }
 
-body {
-    margin: 0;
-    font-family: 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-    background-color: var(--bg);
-}
-
-.navbar {
-    background: var(--primary);
-    color: white;
-    padding: 1rem 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
+body { margin: 0; font-family: 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; background-color: var(--bg); color: var(--primary); }
+.navbar { background: var(--primary); color: white; padding: 1rem 5%; display: flex; justify-content: space-between; }
 .logo { font-size: 1.5rem; font-weight: bold; }
 .accent { color: var(--accent); }
+.container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
 
-.container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+.card { background: var(--white); padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 25px; text-align: center; }
 
-.card {
-    background: var(--white);
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
-    text-align: center;
+/* ボタン類 */
+.btn-primary { background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-weight: bold; cursor: pointer; }
+.btn-secondary { background: #f8f9fa; color: var(--primary); border: 1px solid #ddd; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+.btn-secondary:hover { background: #e9ecef; }
+
+.ranking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+/* バッジがコピーの邪魔をしない設定 */
+.excellent-badge {
+    position: absolute; top: -5px; right: -10px; background: #e74c3c; color: white;
+    font-size: 0.6rem; padding: 3px 8px; border-radius: 20px; font-weight: bold;
+    pointer-events: none; /* マウスイベントを無効化 */
+    user-select: none;    /* テキスト選択を無効化 */
+    animation: pulse 2s infinite;
 }
 
-.btn-primary {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 12px 40px;
-    border-radius: 30px;
-    font-weight: bold;
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* ファイル名表示 */
+.file-name-cell { text-align: left; }
+.fname {
+    font-size: 0.8rem; color: #34495e; font-weight: bold;
+    max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    user-select: all; /* クリックで一括選択可能に */
     cursor: pointer;
 }
+.fcount { font-size: 0.75rem; color: var(--accent); font-weight: bold; margin-top: 4px; }
+.fdetails { font-size: 0.65rem; color: #95a5a6; margin-top: 4px; background: #f0f2f5; padding: 2px 6px; border-radius: 4px; display: inline-block; border-left: 3px solid var(--accent); }
 
-.ranking-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
-.ranking-table th { padding: 12px; border-bottom: 2px solid #eee; font-size: 0.9rem; color: #7f8c8d; }
-.ranking-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.file-name-cell { font-size: 0.8rem; color: #34495e; font-family: monospace; text-align: left; }
 .high-score-row { background-color: rgba(46, 204, 113, 0.08) !important; }
-.text-highlight { color: var(--success) !important; font-weight: bold; }
-
-.thumb-container { position: relative; display: inline-block; }
-.thumb { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
-
-.excellent-badge {
-    position: absolute;
-    top: -5px;
-    right: -8px;
-    background: #e74c3c;
-    color: white;
-    font-size: 0.5rem;
-    padding: 2px 5px;
-    border-radius: 10px;
-    font-weight: bold;
-}
-
-.gauge-bg { width: 100px; height: 6px; background: #eee; border-radius: 3px; margin: 5px auto; overflow: hidden; }
+.pts { font-weight: bold; font-size: 1.2rem; }
+.text-highlight { color: var(--success) !important; font-size: 1.4rem !important; }
+.gauge-bg { width: 100px; height: 10px; background: #eee; border-radius: 5px; margin-top: 5px; overflow: hidden; }
 .gauge-fill { height: 100%; background: var(--accent); transition: width 1s ease; }
-.gauge-excellent { background: linear-gradient(90deg, #f1c40f, #f39c12) !important; }
+.gauge-excellent { background: linear-gradient(90deg, var(--gold), #f39c12) !important; }
 
-.result-img { max-width: 300px; border-radius: 10px; margin-top: 20px; }
-footer { text-align: center; padding: 20px; color: #95a5a6; font-size: 0.8rem; }
+.thumb { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
+.result-img { max-width: 100%; border-radius: 15px; margin-top: 20px; }
+footer { text-align: center; padding: 40px; color: #95a5a6; font-size: 0.8rem; }
