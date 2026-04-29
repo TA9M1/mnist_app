@@ -10,6 +10,7 @@ pillow_heif.register_heif_opener()
 
 app = Flask(__name__)
 
+# 保存先設定
 UPLOAD_FOLDER = './static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'heic', 'HEIC'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -24,26 +25,28 @@ def allowed_file(filename):
 
 def analyze_smile(img_path):
     try:
-        # 画像を開き、向きを補正
+        # 1. 画像を開き、向きを補正
         img = Image.open(img_path)
         img = ImageOps.exif_transpose(img)
 
-        # リサイズ（長辺1200pxに制限）
+        # 2. リサイズ
         max_size = 1200
         if max(img.size) > max_size:
             ratio = max_size / max(img.size)
             new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
             img = img.resize(new_size, Image.Resampling.LANCZOS)
 
-        # 保存先のパスを .jpg に統一
-        new_filename = os.path.splitext(os.path.basename(img_path))[0] + ".jpg"
+        # 3. ファイル名生成（GUIアプリとの連携用）
+        base_name = os.path.splitext(os.path.basename(img_path))[0]
+        new_filename = base_name + ".jpg"
         new_jpg_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         
+        # 4. JPGとして保存
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
         img.save(new_jpg_path, "JPEG", quality=90)
 
-        # RetinaFaceで高精度に全員を解析
+        # 5. AI解析
         results = DeepFace.analyze(
             img_path=new_jpg_path, 
             actions=['emotion'], 
@@ -71,12 +74,11 @@ def analyze_smile(img_path):
 def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('file')
-        
         if not files or files[0].filename == '':
             return render_template("index.html", answer="画像が選択されていません", ranking=ranking_history)
 
-        last_image_url = None
         count_high_score = 0
+        last_image_url = None
 
         for file in files:
             if file and allowed_file(file.filename):
@@ -85,7 +87,6 @@ def upload_file():
                 file.save(filepath)
 
                 score, face_count, details, final_filename = analyze_smile(filepath)
-                
                 if score >= 85:
                     count_high_score += 1
                 
@@ -100,9 +101,8 @@ def upload_file():
                 last_image_url = new_entry['url']
 
         ranking_history.sort(key=lambda x: x['score'], reverse=True)
-        
-        msg = f"解析完了：{len(files)}枚中、{count_high_score}枚がハイスコアでした！"
-        return render_template("index.html", answer=msg, image_url=last_image_url, ranking=ranking_history[:10])
+        msg = f"解析完了：{len(files)}枚中、{count_high_score}枚が85点以上でした！"
+        return render_template("index.html", answer=msg, image_url=last_image_url, ranking=ranking_history)
 
     return render_template("index.html", answer=None, image_url=None, ranking=ranking_history)
 

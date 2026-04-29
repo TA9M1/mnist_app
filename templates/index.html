@@ -3,74 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>笑顔で写真選別プロジェクト／笑顔点数でランキング！</title>
+    <title>AI Smile Lab</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
 </head>
 <body>
     <header class="navbar">
         <div class="logo">AI Visual <span class="accent">Lab</span></div>
-        <div class="header-tag">Professional Data Extraction Mode</div>
     </header>
 
     <div class="container">
         <section class="card upload-card">
-            <h1>Smile Ranking System</h1>
-            <p>集合写真対応。85点以上の写真は一括で名前を抽出できます</p>
-            <form method="POST" enctype="multipart/form-data" class="upload-form">
-                <input type="file" name="file" class="input-file" multiple>
-                <button type="submit" class="btn-primary">解析開始</button>
+            <h1>Smile Ranking</h1>
+            <p class="usage-text">
+                iPhone等の写真データ（HEIC・JPEG）を「ファイル選択」から読み込むことで、AIが笑顔を解析しスコア化します。<br>
+                解析後、スコアの高い写真のファイル名をコピーし、専用のデスクトップアプリ（GUI）に貼り付けることで、笑顔の写真だけをオリジナルの形式で別フォルダへ一括抽出できます。
+            </p>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" multiple class="input-file">
+                <button type="submit" class="btn-primary">一括解析スタート</button>
             </form>
         </section>
-
-        {% if answer %}
-        <section class="card result-card">
-            <p class="score-text">{{ answer }}</p>
-            <img src="{{ image_url }}" class="result-img">
-        </section>
-        {% endif %}
 
         {% if ranking %}
         <section class="card ranking-card">
             <div class="ranking-header">
-                <h2>🏆 Smile Ranking TOP 10</h2>
-                <button onclick="copyHighScores()" class="btn-secondary">📋 85点以上のファイル名をコピー</button>
-            </div>
-
-            <textarea id="copy-area" style="display:none;">{% for item in ranking %}{% if item.score >= 85 %}{{ item.filename }}
+                <h2>🏆 解析結果</h2>
+                <div class="action-bar">
+                    <textarea id="high-score-list" style="display:none;">{% for item in ranking %}{% if item.score >= 85 %}{{ item.filename }}
 {% endif %}{% endfor %}</textarea>
+                    <button onclick="copyHighScores()" class="btn-highlight">⭐ 85点以上を全コピー</button>
+                    <button onclick="toggleAll(this)" class="btn-outline">すべて選択</button>
+                    <button onclick="copySelectedFiles()" class="btn-copy">選択分をコピー</button>
+                </div>
+            </div>
 
             <table class="ranking-table">
                 <thead>
                     <tr>
+                        <th>選択</th>
                         <th>Rank</th>
                         <th>Photo</th>
-                        <th>Info</th>
-                        <th>Best Score</th>
+                        <th>File Name</th>
+                        <th>Score</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in ranking %}
-                    <tr class="rank-row {% if item.score >= 85 %}high-score-row{% endif %}">
-                        <td class="rank-cell">
-                            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+                    <tr class="rank-row">
+                        <td><input type="checkbox" class="file-check" value="{{ item.filename }}"></td>
+                        <td>{{ loop.index }}</td>
+                        <td><img src="{{ item.url }}" class="thumb"></td>
+                        <td class="file-info">
+                            <div class="fname">{{ item.filename }}</div>
+                            <div class="fcount">人数: {{ item.face_count }}人</div>
                         </td>
-                        <td>
-                            <div class="thumb-container">
-                                <img src="{{ item.url }}" class="thumb">
-                                {% if item.score >= 85 %}<span class="excellent-badge">Good!</span>{% endif %}
-                            </div>
-                        </td>
-                        <td class="file-name-cell">
-                            <div class="fname" title="クリックで選択">{{ item.filename }}</div>
-                            <div class="fcount">検出: {{ item.face_count }}人</div>
-                            {% if item.face_count > 1 %}
-                            <div class="fdetails">内訳: {{ item.details }}</div>
-                            {% endif %}
-                        </td>
-                        <td class="score-cell">
-                            <span class="pts {% if item.score >= 85 %}text-highlight{% endif %}">{{ item.score }} <small>pts</small></span>
-                            <div class="gauge-bg"><div class="gauge-fill {% if item.score >= 85 %}gauge-excellent{% endif %}" style="width: {{ item.score }}%;"></div></div>
-                        </td>
+                        <td class="score-cell"><strong>{{ item.score }}</strong> pts</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -81,14 +68,24 @@
 
     <script>
     function copyHighScores() {
-        const copyText = document.getElementById("copy-area").value.trim();
-        if (!copyText) {
-            alert("85点以上のファイル名が見つかりません。");
-            return;
-        }
-        navigator.clipboard.writeText(copyText).then(() => {
-            alert("85点以上のファイル名をコピーしました（改行区切り）。\n貼り付けの際に活用してください。");
-        });
+        const text = document.getElementById('high-score-list').value.trim();
+        if (!text) { alert("85点以上のファイルはありません。"); return; }
+        navigator.clipboard.writeText(text).then(() => { alert("85点以上のファイル名をコピーしました！"); });
+    }
+
+    let isAllChecked = false;
+    function toggleAll(btn) {
+        const checkboxes = document.querySelectorAll('.file-check');
+        isAllChecked = !isAllChecked;
+        checkboxes.forEach(cb => cb.checked = isAllChecked);
+        btn.innerText = isAllChecked ? "選択解除" : "すべて選択";
+    }
+
+    function copySelectedFiles() {
+        const checkedBoxes = document.querySelectorAll('.file-check:checked');
+        if (checkedBoxes.length === 0) { alert("ファイルを選択してください。"); return; }
+        const fileList = Array.from(checkedBoxes).map(cb => cb.value).join('\n');
+        navigator.clipboard.writeText(fileList).then(() => { alert(checkedBoxes.length + "件をコピーしました。"); });
     }
     </script>
 </body>
