@@ -1,6 +1,7 @@
-flask
-pillow
-tensorflow-cpu
-tf-keras
+Flask
 deepface
+retinaface
+tf-keras
+pillow-heif
+tensorflow-cpu  # tensorflow の代わりにこれを使用
 gunicorn
